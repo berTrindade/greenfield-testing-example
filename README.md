@@ -47,9 +47,11 @@ flowchart LR
 | **Integration** | [`tests/integration`](tests/integration) | **real Postgres** in Docker via [Testcontainers](https://testcontainers.com/) | seconds | yes |
 
 - **Unit** covers every branch of the logic with zero I/O.
-- **Contract** pins the wire format of the payment adapter. A provider schema
-  change breaks the build, but no real API is ever called in CI (no quota, no
-  flakiness, no rate limits).
+- **Contract** pins the wire format of the payment adapter against a mock, so it
+  catches *our* side drifting from the agreed shape without ever calling the real
+  API (no quota, no flakiness, no rate limits). It does **not** catch the provider
+  changing their response, the mock returns the agreed shape forever. That gap is
+  what a live test covers.
 - **Integration** runs against a real Postgres container with the real
   migrations, so it catches what an in-memory fake cannot — for example the
   `UNIQUE(email)` constraint. A fresh container per run means no shared-state
@@ -60,10 +62,10 @@ flowchart LR
 - **No in-memory / SQLite substitute for Postgres.** Fakes diverge from prod on
   exactly the things integration tests exist to catch (constraints, JSONB,
   transactions). Use a real container.
-- **No live suite against a deployed environment.** That belongs in a
-  scheduled/post-deploy job, not per-PR — add it once something is deployed to
-  hit. Third parties that are rate-limited or expensive stay on that gate, not
-  on every PR (contract tests cover their interface).
+- **No live suite yet, by design.** A live test against a real provider belongs
+  in a manual or scheduled job, not per-PR, and you add it near release once
+  there's a sandbox to hit. It's the only tier that catches the provider changing
+  their own API. Contract catches *your* drift every PR, live catches *theirs*.
 - **No per-PR ephemeral full-stack environment.** Real value, real ops cost. Add
   it when multiple services start drifting against each other, not on day one.
 
