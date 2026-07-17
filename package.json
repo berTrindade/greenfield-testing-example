@@ -1,0 +1,25 @@
+{
+  "name": "greenfield-testing-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reference CI testing setup for a greenfield service: unit + Testcontainers integration + contract tests, all in CI.",
+  "scripts": {
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:contract": "vitest run --project contract",
+    "test:ci": "vitest run"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^10.16.0",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "nock": "^14.0.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4"
+  }
+}

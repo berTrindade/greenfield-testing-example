@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # All three tiers on every PR. The integration tier uses Testcontainers,
+      # which talks to the Docker daemon preinstalled on GitHub's ubuntu runners
+      # - no `services:` block or shared database needed.
+      - run: npm run test:ci
