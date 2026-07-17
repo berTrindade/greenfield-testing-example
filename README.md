@@ -90,33 +90,30 @@ flowchart LR
     U --> G{"all green?"}
     K --> G
     I --> G
-    G -.->|"gate documented,<br/>not enforced yet"| M["merge to main"]
+    G ==>|"required check<br/>blocks merge if red"| M["merge to main"]
 
-    classDef gap fill:#5a1e1e,stroke:#e05252,color:#fff;
-    class G,M gap
+    classDef gate fill:#1e4d2b,stroke:#4caf50,color:#fff;
+    class G,M gate
 ```
 
-The dashed edge is the one gap this repo owns, described next.
+The bold edge is a **required status check** - a red run blocks the merge, it
+does not just report.
 
-## Known limitation - CI here is advisory, not an enforced gate
+## The gate is enforced
 
 A principle this repo argues for is "make the gate the enforcement" - CI that
 merely runs is advisory, only a required status check actually blocks a red PR
-from merging. This repo does not fully practice that yet. Branch protection and
-rulesets on a **private** repo require a paid GitHub plan, and this repo is
-private on the free plan, so GitHub returns:
+from merging. This repo now practices that. A branch ruleset on `main`
+(`require-ci-on-main`) requires the `test` check to pass and requires changes to
+arrive by pull request, with no bypass for anyone including the owner.
 
-> Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)
+The consequence is real, not cosmetic. You cannot push straight to `main`
+anymore - every change goes through a PR, and a PR whose `test` run is red cannot
+be merged. Updating this very section had to go through a PR that passed CI.
 
-The result: the workflow runs and reports on every PR, but nothing stops a
-failing PR being merged. The pipeline is real, the gate is documentation.
+Note on plans: branch protection and rulesets need either a **public** repo or a
+paid plan. This repo was flipped from private to public (a testing reference has
+nothing sensitive in it) to unlock rulesets on the free plan.
 
-To make the gate real, pick one:
-
-- **Make the repo public** - unlocks free branch protection via rulesets, then
-  require the `test` check before merge. Cleanest for a reference repo with
-  nothing sensitive in it.
-- **Upgrade to GitHub Pro** - keeps it private and enables protection.
-
-On a real greenfield project this is a day-one setup step, not an afterthought:
+On a real greenfield project this is a day-one setup step, not an afterthought -
 require the CI check on the default branch before the first feature merges.
