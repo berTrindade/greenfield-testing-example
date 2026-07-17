@@ -54,3 +54,26 @@ npm run test:ci            # all three - what CI runs
 CI is [`.github/workflows/ci.yml`](.github/workflows/ci.yml): `npm ci` then
 `npm run test:ci`. GitHub's `ubuntu-latest` runners ship Docker, so the
 Testcontainers tier works with no extra setup.
+
+## Known limitation - CI here is advisory, not an enforced gate
+
+A principle this repo argues for is "make the gate the enforcement" - CI that
+merely runs is advisory, only a required status check actually blocks a red PR
+from merging. This repo does not fully practice that yet. Branch protection and
+rulesets on a **private** repo require a paid GitHub plan, and this repo is
+private on the free plan, so GitHub returns:
+
+> Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)
+
+The result: the workflow runs and reports on every PR, but nothing stops a
+failing PR being merged. The pipeline is real, the gate is documentation.
+
+To make the gate real, pick one:
+
+- **Make the repo public** - unlocks free branch protection via rulesets, then
+  require the `test` check before merge. Cleanest for a reference repo with
+  nothing sensitive in it.
+- **Upgrade to GitHub Pro** - keeps it private and enables protection.
+
+On a real greenfield project this is a day-one setup step, not an afterthought:
+require the CI check on the default branch before the first feature merges.
