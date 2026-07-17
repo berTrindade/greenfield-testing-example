@@ -12,6 +12,32 @@ different kind of dependency without touching the logic. Retrofitting this into 
 codebase that calls the database and HTTP clients inline everywhere is the
 expensive part — so you do it from commit #1.
 
+The `signup` logic depends on two ports, and each test tier supplies a different
+implementation of them. Same logic under test, three different dependencies.
+
+```mermaid
+flowchart LR
+    S["signup()<br/>domain logic"] --> UR(["UsersRepo<br/>port"])
+    S --> PG(["PaymentGateway<br/>port"])
+
+    UR --> F1["FakeUsersRepo<br/><i>unit tier</i>"]
+    UR --> P1["PgUsersRepo<br/><i>integration tier</i>"]
+    P1 --> DB[("real Postgres<br/>Testcontainers")]
+
+    PG --> F2["fake gateway<br/><i>unit tier</i>"]
+    PG --> H1["HttpPaymentGateway<br/><i>contract tier</i>"]
+    H1 --> NK["mocked HTTP endpoint<br/>nock"]
+
+    classDef port fill:#1e3a5a,stroke:#4a90d9,color:#fff;
+    classDef unit fill:#1e4d2b,stroke:#4caf50,color:#fff;
+    classDef contract fill:#4d3d1e,stroke:#d9a441,color:#fff;
+    classDef integ fill:#3d1e4d,stroke:#a441d9,color:#fff;
+    class UR,PG port
+    class F1,F2 unit
+    class H1,NK contract
+    class P1,DB integ
+```
+
 ## The three tiers
 
 | Tier | File | Dependency | Speed | In CI? |
@@ -54,6 +80,23 @@ npm run test:ci            # all three - what CI runs
 CI is [`.github/workflows/ci.yml`](.github/workflows/ci.yml): `npm ci` then
 `npm run test:ci`. GitHub's `ubuntu-latest` runners ship Docker, so the
 Testcontainers tier works with no extra setup.
+
+```mermaid
+flowchart LR
+    D["git push / open PR"] --> C["npm run test:ci"]
+    C --> U["unit<br/>fakes · ms"]
+    C --> K["contract<br/>nock · ms"]
+    C --> I["integration<br/>Testcontainers PG · ~5s"]
+    U --> G{"all green?"}
+    K --> G
+    I --> G
+    G -.->|"gate documented,<br/>not enforced yet"| M["merge to main"]
+
+    classDef gap fill:#5a1e1e,stroke:#e05252,color:#fff;
+    class G,M gap
+```
+
+The dashed edge is the one gap this repo owns, described next.
 
 ## Known limitation - CI here is advisory, not an enforced gate
 
